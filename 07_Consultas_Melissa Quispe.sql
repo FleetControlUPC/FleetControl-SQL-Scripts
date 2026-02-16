@@ -44,7 +44,7 @@ GO
 DECLARE @ID_Empresa INT = 1;
 DECLARE @UltimosDias INT = 30;
 
-SELECT TOP 15
+SELECT TOP 10
     V.placa,
     C.nombre AS Conductor,
     I.tipo AS Tipo_Incidencia,
@@ -58,3 +58,4 @@ WHERE V.cod_empresa = @ID_Empresa
   AND I.fecha >= DATEADD(DAY, -@UltimosDias, GETDATE())
 ORDER BY I.fecha DESC;
 GO
+
