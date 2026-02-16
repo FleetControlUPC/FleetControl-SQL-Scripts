@@ -4,30 +4,44 @@ GO
 -- Consulta 7
   
 SELECT
-YEAR(vj.fec_salida) AS anio,
-MONTH(vj.fec_salida) AS mes,
-COUNT(DISTINCT vj.cod_viaje) AS total_viajes,
-SUM(ISNULL(cc.costo,0)) AS total_combustible,
-SUM(ISNULL(m.costo,0)) AS total_mantenimiento,
-SUM(ISNULL(cc.costo,0)) + SUM(ISNULL(m.costo,0)) 
-AS gasto_total_mensual,
-RANK() OVER
-(
-    ORDER BY 
-    SUM(ISNULL(cc.costo,0)) + SUM(ISNULL(m.costo,0)) DESC
-) AS ranking_mes_gasto
-FROM VIAJE vj
-LEFT JOIN CARGA_COMBUSTIBLE cc
-ON vj.cod_viaje = cc.cod_viaje
-LEFT JOIN VEHICULO v
-ON vj.cod_vehiculo = v.cod_vehiculo
-LEFT JOIN MANTENIMIENTO m
-ON v.cod_vehiculo = m.cod_vehiculo
-AND YEAR(m.fecha) = YEAR(vj.fec_salida)
-AND MONTH(m.fecha) = MONTH(vj.fec_salida)
+    YEAR(i.fecha) AS anio,
+    MONTH(i.fecha) AS mes,
+    v.cod_vehiculo,
+    v.placa,
+    v.marca,
+    v.modelo,
+    COUNT(DISTINCT i.cod_inspeccion) AS total_inspecciones,
+    COUNT(DISTINCT vj.cod_viaje) AS total_viajes,
+    SUM(CASE 
+            WHEN i.resultado_global = 'APROBADO' 
+            THEN 1 ELSE 0 
+        END) AS inspecciones_aprobadas,
+    SUM(CASE 
+            WHEN i.resultado_global <> 'APROBADO' 
+            THEN 1 ELSE 0 
+        END) AS inspecciones_observadas,
+    RANK() OVER
+    (
+        PARTITION BY YEAR(i.fecha), MONTH(i.fecha)
+        ORDER BY COUNT(DISTINCT i.cod_inspeccion) DESC
+    ) AS ranking_inspecciones_mes
+FROM INSPECCION_DIARIA i
+INNER JOIN VIAJE vj
+    ON i.cod_viaje = vj.cod_viaje
+INNER JOIN VEHICULO v
+    ON vj.cod_vehiculo = v.cod_vehiculo
 GROUP BY
-YEAR(vj.fec_salida),
-MONTH(vj.fec_salida);
+    YEAR(i.fecha),
+    MONTH(i.fecha),
+    v.cod_vehiculo,
+    v.placa,
+    v.marca,
+    v.modelo
+ORDER BY
+    anio DESC,
+    mes DESC,
+    total_inspecciones DESC;
+
 
 -- Consulta 8
 
