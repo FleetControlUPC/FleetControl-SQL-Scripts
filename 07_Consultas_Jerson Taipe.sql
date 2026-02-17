@@ -42,6 +42,11 @@ GO
 -- Consulta 15
 DECLARE @ID_Empresa INT = 1;
 
+WITH GalonesPorViaje AS (
+    SELECT cod_viaje, SUM(galones) AS galones
+    FROM CARGA_COMBUSTIBLE
+    GROUP BY cod_viaje
+)
 SELECT 
     V.placa,
     V.modelo,
@@ -50,7 +55,7 @@ SELECT
     ROUND(SUM(Vi.km_recorridos) / NULLIF(SUM(CC.galones), 0), 2) AS Rendimiento_Km_Galon
 FROM VEHICULO V
 JOIN VIAJE Vi ON V.cod_vehiculo = Vi.cod_vehiculo
-JOIN CARGA_COMBUSTIBLE CC ON Vi.cod_viaje = CC.cod_viaje
+JOIN GalonesPorViaje CC ON Vi.cod_viaje = CC.cod_viaje
 WHERE V.cod_empresa = @ID_Empresa
 GROUP BY V.placa, V.modelo
 ORDER BY Rendimiento_Km_Galon DESC;
